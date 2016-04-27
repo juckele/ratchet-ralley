@@ -126,7 +126,6 @@ public class RatchetRally implements ApplicationListener {
 	}
 
 	PerspectiveCamera cam;
-	CameraInputController camController;
 	ModelBatch modelBatch;
 	Environment environment;
 	Model model;
@@ -156,9 +155,6 @@ public class RatchetRally implements ApplicationListener {
 		cam.near = 1f;
 		cam.far = 300f;
 		cam.update();
-
-		camController = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(camController);
 
 		ModelBuilder mb = new ModelBuilder();
 		mb.begin();
@@ -231,10 +227,14 @@ public class RatchetRally implements ApplicationListener {
 		final float delta = Math.min(1f / 30f, Gdx.graphics.getDeltaTime());
 
 		angle = (angle + delta * speed) % 360f;
+//		instances.get(0).transform.setTranslation(0, MathUtils.sinDeg(angle) * 2.5f, 0f);
 
 		dynamicsWorld.stepSimulation(delta, 5, 1f / 60f);
 
-		camController.update();
+		if ((spawnTimer -= delta) < 0) {
+				spawn();
+			spawnTimer = 0.2f;
+		}
 
 		Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1.f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
