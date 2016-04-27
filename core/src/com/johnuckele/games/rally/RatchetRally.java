@@ -25,6 +25,7 @@ import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btCylinderShape;
 import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
 import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btDispatcher;
@@ -149,16 +150,16 @@ public class RatchetRally implements ApplicationListener {
 		mb.node().id = "car";
 		mb.part("car", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.BROWN)))
 			.box(1f, 0.5f, 2f);
-		mb.node().id = "box";
-		mb.part("box", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.BLUE)))
-			.box(1f, 1f, 1f);
+		mb.node().id = "wheel";
+		mb.part("wheel", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GRAY)))
+			.cylinder(1f, 0.1f, 1f, 10);
 		model = mb.end();
 
 		constructors = new ArrayMap<String, GameObject.Constructor>(String.class, GameObject.Constructor.class);
 		constructors.put("ground", new GameObject.Constructor(model, "ground", new btBoxShape(new Vector3(25f, 0.5f, 25f)), 0f));
 		constructors.put("sphere", new GameObject.Constructor(model, "sphere", new btSphereShape(0.5f), 1f));
 		constructors.put("car", new GameObject.Constructor(model, "car", new btBoxShape(new Vector3(0.5f, 0.25f, 1f)), 1f));
-		constructors.put("box", new GameObject.Constructor(model, "box", new btBoxShape(new Vector3(0.5f, 0.5f, 0.5f)), 1f));
+		constructors.put("wheel", new GameObject.Constructor(model, "wheel", new btCylinderShape(new Vector3(.5f, .05f, .5f)), 1f));
 
 		collisionConfig = new btDefaultCollisionConfiguration();
 		dispatcher = new btCollisionDispatcher(collisionConfig);
