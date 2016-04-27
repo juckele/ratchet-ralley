@@ -176,10 +176,13 @@ public class RatchetRally implements ApplicationListener {
 		object.body.setContactCallbackFlag(GROUND_FLAG);
 		object.body.setContactCallbackFilter(0);
 		object.body.setActivationState(Collision.DISABLE_DEACTIVATION);
+		
+		// Spawn car
+		spawn("car");
 	}
 
-	public void spawn () {
-		GameObject obj = constructors.values[1 + MathUtils.random(constructors.size - 2)].construct();
+	public void spawn (String objectName) {
+		GameObject obj = constructors.get(objectName).construct();
 		obj.transform.setFromEulerAngles(MathUtils.random(360f), MathUtils.random(360f), MathUtils.random(360f));
 		obj.transform.trn(MathUtils.random(-0.5f, 0.5f), 18f, MathUtils.random(-0.5f, 0.5f));
 		obj.body.setLinearVelocity(new Vector3(0, -10f, 0));
@@ -199,15 +202,7 @@ public class RatchetRally implements ApplicationListener {
 	public void render () {
 		final float delta = Math.min(1f / 30f, Gdx.graphics.getDeltaTime());
 
-		angle = (angle + delta * speed) % 360f;
-//		instances.get(0).transform.setTranslation(0, MathUtils.sinDeg(angle) * 2.5f, 0f);
-
 		dynamicsWorld.stepSimulation(delta, 5, 1f / 60f);
-
-/*		if ((spawnTimer -= delta) < 0) {
-				spawn();
-			spawnTimer = 0.2f;
-		}*/
 
 		Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1.f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
