@@ -204,10 +204,10 @@ public class RatchetRally implements ApplicationListener {
 
 		dynamicsWorld.stepSimulation(delta, 5, 1f / 60f);
 
-		if ((spawnTimer -= delta) < 0) {
+/*		if ((spawnTimer -= delta) < 0) {
 				spawn();
 			spawnTimer = 0.2f;
-		}
+		}*/
 
 		Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1.f);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
