@@ -13,23 +13,18 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.Collision;
-import com.badlogic.gdx.physics.bullet.collision.ContactListener;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseInterface;
-import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
-import com.badlogic.gdx.physics.bullet.collision.btConeShape;
-import com.badlogic.gdx.physics.bullet.collision.btCylinderShape;
 import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
 import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btDispatcher;
@@ -50,18 +45,6 @@ public class RatchetRally implements ApplicationListener {
 	final static short GROUND_FLAG = 1 << 8;
 	final static short OBJECT_FLAG = 1 << 9;
 	final static short ALL_FLAG = -1;
-
-	class MyContactListener extends ContactListener {
-		@Override
-		public boolean onContactAdded (int userValue0, int partId0, int index0, boolean match0, int userValue1, int partId1,
-			int index1, boolean match1) {
-			if (match0)
-				((ColorAttribute)instances.get(userValue0).materials.get(0).get(ColorAttribute.Diffuse)).color.set(Color.WHITE);
-			if (match1)
-				((ColorAttribute)instances.get(userValue1).materials.get(0).get(ColorAttribute.Diffuse)).color.set(Color.WHITE);
-			return true;
-		}
-	}
 
 	static class MyMotionState extends btMotionState {
 		Matrix4 transform;
@@ -135,7 +118,6 @@ public class RatchetRally implements ApplicationListener {
 
 	btCollisionConfiguration collisionConfig;
 	btDispatcher dispatcher;
-	MyContactListener contactListener;
 	btBroadphaseInterface broadphase;
 	btDynamicsWorld dynamicsWorld;
 	btConstraintSolver constraintSolver;
@@ -164,6 +146,9 @@ public class RatchetRally implements ApplicationListener {
 		mb.node().id = "sphere";
 		mb.part("sphere", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GREEN)))
 			.sphere(1f, 1f, 1f, 10, 10);
+		mb.node().id = "car";
+		mb.part("car", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.BROWN)))
+			.box(1f, 0.5f, 2f);
 		mb.node().id = "box";
 		mb.part("box", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.BLUE)))
 			.box(1f, 1f, 1f);
@@ -172,6 +157,7 @@ public class RatchetRally implements ApplicationListener {
 		constructors = new ArrayMap<String, GameObject.Constructor>(String.class, GameObject.Constructor.class);
 		constructors.put("ground", new GameObject.Constructor(model, "ground", new btBoxShape(new Vector3(25f, 0.5f, 25f)), 0f));
 		constructors.put("sphere", new GameObject.Constructor(model, "sphere", new btSphereShape(0.5f), 1f));
+		constructors.put("car", new GameObject.Constructor(model, "car", new btBoxShape(new Vector3(0.5f, 0.25f, 1f)), 1f));
 		constructors.put("box", new GameObject.Constructor(model, "box", new btBoxShape(new Vector3(0.5f, 0.5f, 0.5f)), 1f));
 
 		collisionConfig = new btDefaultCollisionConfiguration();
@@ -180,7 +166,6 @@ public class RatchetRally implements ApplicationListener {
 		constraintSolver = new btSequentialImpulseConstraintSolver();
 		dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, constraintSolver, collisionConfig);
 		dynamicsWorld.setGravity(new Vector3(0, -10f, 0));
-		contactListener = new MyContactListener();
 
 		instances = new Array<GameObject>();
 		GameObject object = constructors.get("ground").construct();
@@ -246,8 +231,6 @@ public class RatchetRally implements ApplicationListener {
 		broadphase.dispose();
 		dispatcher.dispose();
 		collisionConfig.dispose();
-
-		contactListener.dispose();
 
 		modelBatch.dispose();
 		model.dispose();
