@@ -33,8 +33,10 @@ import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btConstraintSolver;
 import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
+import com.badlogic.gdx.physics.bullet.dynamics.btHingeConstraint;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
+import com.badlogic.gdx.physics.bullet.dynamics.btTypedConstraint;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ArrayMap;
@@ -152,7 +154,7 @@ public class RatchetRally implements ApplicationListener {
 			.box(1f, 0.5f, 2f);
 		mb.node().id = "wheel";
 		mb.part("wheel", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GRAY)))
-			.cylinder(1f, 0.1f, 1f, 10);
+			.cylinder(1f, 0.1f, 1f, 3);
 		model = mb.end();
 
 		constructors = new ArrayMap<String, GameObject.Constructor>(String.class, GameObject.Constructor.class);
@@ -178,26 +180,45 @@ public class RatchetRally implements ApplicationListener {
 		object.body.setActivationState(Collision.DISABLE_DEACTIVATION);
 		
 		// Spawn car
-		spawn("car");
+		GameObject carObject = constructors.get("car").construct();
+		carObject.transform.setFromEulerAngles(0,0,0);
+		carObject.transform.trn(0, 5f, 0);
+		carObject.body.proceedToTransform(carObject.transform);
+		carObject.body.setUserValue(instances.size);
+		carObject.body.setCollisionFlags(carObject.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+		instances.add(carObject);
+		dynamicsWorld.addRigidBody(carObject.body);
+		carObject.body.setContactCallbackFlag(OBJECT_FLAG);
+		carObject.body.setContactCallbackFilter(GROUND_FLAG);
+
+		addWheel(carObject, 1, 1, 1f, true, 4f);
+		addWheel(carObject, -1, 1, 1f, true, 4f);
+		addWheel(carObject, 1, -1, 0f, true, 4f);
+		addWheel(carObject, -1, -1, 0f, true, 4f);
+		
+		
 	}
 
-	public void spawn (String objectName) {
-		GameObject obj = constructors.get(objectName).construct();
-		obj.transform.setFromEulerAngles(MathUtils.random(360f), MathUtils.random(360f), MathUtils.random(360f));
-		obj.transform.trn(MathUtils.random(-0.5f, 0.5f), 18f, MathUtils.random(-0.5f, 0.5f));
-		obj.body.setLinearVelocity(new Vector3(0, -10f, 0));
-		obj.body.setAngularVelocity(new Vector3(MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f), MathUtils.random(-1f, 1f)));
-		obj.body.proceedToTransform(obj.transform);
-		obj.body.setUserValue(instances.size);
-		obj.body.setCollisionFlags(obj.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-		instances.add(obj);
-		dynamicsWorld.addRigidBody(obj.body);
-		obj.body.setContactCallbackFlag(OBJECT_FLAG);
-		obj.body.setContactCallbackFilter(GROUND_FLAG);
+	private void addWheel(GameObject car, float wheelBaseWidth, float wheelBaseLength, float steering, boolean motor, float motorSpeed) {
+		// Spawn one wheel, derp
+		GameObject wheelObject = constructors.get("wheel").construct();
+		wheelObject.transform.setFromEulerAngles(0,0,90);
+		wheelObject.transform.trn(0, 5f, 0);
+		wheelObject.body.proceedToTransform(wheelObject.transform);
+		wheelObject.body.setUserValue(instances.size);
+		wheelObject.body.setCollisionFlags(wheelObject.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+		instances.add(wheelObject);
+		dynamicsWorld.addRigidBody(wheelObject.body);
+		wheelObject.body.setContactCallbackFlag(OBJECT_FLAG);
+		wheelObject.body.setContactCallbackFilter(GROUND_FLAG);
+		
+		btHingeConstraint constraint = new btHingeConstraint(car.body, wheelObject.body, new Vector3(wheelBaseWidth,0,wheelBaseLength), new Vector3(0,0,0),new Vector3(1,0,steering), new Vector3(0,1,0), true);
+		if(motor) {
+			constraint.enableAngularMotor(true, motorSpeed, 10f);
+		}
+		dynamicsWorld.addConstraint(constraint, true);
 	}
-
-	float angle, speed = 90f;
-
+	
 	@Override
 	public void render () {
 		final float delta = Math.min(1f / 30f, Gdx.graphics.getDeltaTime());
