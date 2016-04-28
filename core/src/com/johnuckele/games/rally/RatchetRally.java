@@ -154,7 +154,7 @@ public class RatchetRally implements ApplicationListener {
 			.box(1f, 0.5f, 2f);
 		mb.node().id = "wheel";
 		mb.part("wheel", GL20.GL_TRIANGLES, Usage.Position | Usage.Normal, new Material(ColorAttribute.createDiffuse(Color.GRAY)))
-			.cylinder(1f, 0.1f, 1f, 3);
+			.cylinder(1f, 0.1f, 1f, 10);
 		model = mb.end();
 
 		constructors = new ArrayMap<String, GameObject.Constructor>(String.class, GameObject.Constructor.class);
@@ -191,10 +191,10 @@ public class RatchetRally implements ApplicationListener {
 		carObject.body.setContactCallbackFlag(OBJECT_FLAG);
 		carObject.body.setContactCallbackFilter(GROUND_FLAG);
 
-		addWheel(carObject, 1, 1, 1f, true, 4f);
-		addWheel(carObject, -1, 1, 1f, true, 4f);
-		addWheel(carObject, 1, -1, 0f, true, 4f);
-		addWheel(carObject, -1, -1, 0f, true, 4f);
+		addWheel(carObject, 1, 1, -1f, true, 8f);
+		addWheel(carObject, -1, 1, -1f, false, 8f);
+		addWheel(carObject, 1, -1, 0f, false, 8f);
+		addWheel(carObject, -1, -1, 0f, false, 8f);
 		
 		
 	}
@@ -207,6 +207,7 @@ public class RatchetRally implements ApplicationListener {
 		wheelObject.body.proceedToTransform(wheelObject.transform);
 		wheelObject.body.setUserValue(instances.size);
 		wheelObject.body.setCollisionFlags(wheelObject.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+		wheelObject.body.setFriction(100f);
 		instances.add(wheelObject);
 		dynamicsWorld.addRigidBody(wheelObject.body);
 		wheelObject.body.setContactCallbackFlag(OBJECT_FLAG);
@@ -214,7 +215,7 @@ public class RatchetRally implements ApplicationListener {
 		
 		btHingeConstraint constraint = new btHingeConstraint(car.body, wheelObject.body, new Vector3(wheelBaseWidth,0,wheelBaseLength), new Vector3(0,0,0),new Vector3(1,0,steering), new Vector3(0,1,0), true);
 		if(motor) {
-			constraint.enableAngularMotor(true, motorSpeed, 10f);
+			constraint.enableAngularMotor(true, motorSpeed, 1000f);
 		}
 		dynamicsWorld.addConstraint(constraint, true);
 	}
